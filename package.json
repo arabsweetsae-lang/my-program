@@ -1,0 +1,43 @@
+{
+  "name": "payroll-system-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Payroll management application for desktop and mobile",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "build:web": "node scripts/copy-web-assets.js",
+    "android:init": "npm run build:web && cap add android",
+    "android:sync": "npm run build:web && cap sync android",
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@supabase/supabase-js": "^2.117.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.payroll.system",
+    "productName": "Payroll System",
+    "files": [
+      "main.js",
+      "index.html",
+      "app.js",
+      "styles.css"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "Payroll-System-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

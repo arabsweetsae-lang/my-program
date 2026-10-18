@@ -1,0 +1,34 @@
+import { createClient } from '@supabase/supabase-js'
+
+// 1. ضع بيانات مشروعك هنا 'https://lvpgquvxljjvmjtntpnf.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_8to5qYQMpYcta6gE2myfbw_19Z61aGi'
+
+// 2. إنشاء عميل Supabase
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// 3. دالة لجلب العمليات الموجودة مسبقاً
+export async function fetchOperations() {
+  const { data, error } = await supabase
+    .from('operations') // اسم الجدول الذي أنشأته
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('خطأ في جلب البيانات:', error)
+    return []
+  }
+  return data
+}
+
+// 4. دالة لإضافة عملية جديدة (ستظهر تلقائياً في باقي الأجهزة)
+export async function addOperation(titleText, amountValue) {
+  const { data, error } = await supabase
+    .from('operations')
+    .insert([
+      { title: titleText, amount: amountValue }
+    ])
+
+  if (error) {
+    console.error('خطأ في إضافة العملية:', error)
+  }
+}

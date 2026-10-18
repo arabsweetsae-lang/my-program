@@ -1,0 +1,8 @@
+{
+  "appId": "com.payroll.system",
+  "appName": "نظام إدارة الرواتب",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

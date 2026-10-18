@@ -1,110 +1,776 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:">
-  <title>بوابة الأنظمة الإدارية</title>
-  <link rel="stylesheet" href="portal.css">
-  <script src="portal.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>نظام إدارة الرواتب</title>
+    <meta name="theme-color" content="#203a46">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="إدارة الرواتب">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <header id="application-bar" class="application-bar" hidden>
-    <div class="bar-brand">
-      <span class="brand-mark brand-mark-small" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span>الأنظمة الإدارية</span>
+    <div id="login-screen">
+        <div class="login-shell">
+            <aside class="login-brand-panel" aria-label="هوية الشركة">
+                <div class="login-brand-lockup">
+                    <div class="login-logo" id="login-logo" role="img" aria-label="شعار الشركة">
+                        <span class="login-logo-fallback" aria-hidden="true">ع</span>
+                    </div>
+                    <div class="login-brand-copy">
+                        <span class="login-brand-kicker">نظام إدارة الرواتب</span>
+                        <h2 id="login-company-name">الشركة</h2>
+                    </div>
+                </div>
+                <div class="login-brand-message">
+                    <span class="login-brand-rule" aria-hidden="true"></span>
+                    <p>مساحة عمل متكاملة لإدارة الموظفين والرواتب والفروع.</p>
+                    <span class="login-brand-topics">الموظفون <b aria-hidden="true">·</b> الرواتب <b aria-hidden="true">·</b> التقارير</span>
+                </div>
+                <span class="login-brand-footnote">إدارة واضحة لكل يوم عمل</span>
+            </aside>
+            <section class="login-container" aria-labelledby="login-title">
+                <div class="login-form-heading">
+                    <span class="login-form-kicker">دخول آمن إلى مساحة العمل</span>
+                    <h1 id="login-title">مرحباً بعودتك</h1>
+                    <p>سجّل الدخول للوصول إلى جميع أدوات إدارة الرواتب.</p>
+                </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">اسم المستخدم</label>
+                    <input type="text" id="login-username" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">كلمة المرور</label>
+                    <input type="password" id="login-password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">دخول</button>
+                <p id="login-error" class="error-text" style="display:none">اسم المستخدم أو كلمة المرور غير صحيحة</p>
+            </form>
+            </section>
+        </div>
     </div>
-    <div class="bar-current">
-      <span class="status-dot" aria-hidden="true"></span>
-      <span id="active-app-label"></span>
+
+    <div id="app" style="display:none">
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="company-logo" id="sidebar-logo"></div>
+                <h3 id="sidebar-company-name">الشركة</h3>
+            </div>
+            <ul class="nav-menu" aria-label="التنقل الرئيسي">
+                <li><button class="nav-item" type="button" data-page="employees" aria-controls="employees"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>إدارة الموظفين</span></button></li>
+                <li><button class="nav-item" type="button" data-page="salary-sheet" aria-controls="salary-sheet"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h4m-4 4h10m2-4h.01"/></svg><span>كشف الرواتب</span></button></li>
+                <li><button class="nav-item" type="button" data-page="absence-deductions" aria-controls="absence-deductions"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l4 4v14H4V3z"/><path d="M16 3v5h5M8 12h8M8 16h5"/><path d="m15 16 2 2 4-4"/></svg><span>الغياب والخصومات</span></button></li>
+                <li><button class="nav-item" type="button" data-page="salary-receipts" aria-controls="salary-receipts"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4H7zM5 7h14v14H5z"/><path d="M8 11h8M8 15h5M8 18h3"/></svg><span>سندات رواتب الفرع</span></button></li>
+                <li><button class="nav-item" type="button" data-page="print-vouchers" aria-controls="print-vouchers"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg><span>طباعة السندات</span></button></li>
+                <li><button class="nav-item" type="button" data-page="branches" aria-controls="branches"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M8 9h.01M12 9h.01M16 9h.01"/></svg><span>ملخص الفروع</span></button></li>
+                <li><button class="nav-item" type="button" data-page="settings" aria-controls="settings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a8 8 0 0 1-.1 2z"/></svg><span>الإعدادات</span></button></li>
+            </ul>
+            <div class="sidebar-footer">
+                <div id="sync-status" class="sync-status sync-offline">غير متصل - حفظ محلي</div>
+                <button id="logout-btn" class="btn btn-danger">تسجيل الخروج</button>
+            </div>
+        </nav>
+
+        <main id="main-content">
+            <section id="absence-deductions" class="page" aria-hidden="true">
+                <div class="page-header report-header">
+                    <div>
+                        <span class="report-eyebrow">تقارير الموارد البشرية</span>
+                        <h2>تقرير الغياب والخصومات</h2>
+                        <p>سجل موحّد لجميع قيود الغياب والخصم عبر الشهور، مع إمكانية التصفية بالتاريخ.</p>
+                    </div>
+                    <div class="report-header-actions">
+                        <button class="btn btn-success report-export-button" type="button" onclick="exportAbsenceDeductionReport()"><span aria-hidden="true">↧</span> تصدير Excel</button>
+                        <button class="btn btn-primary report-print-button" type="button" onclick="printAbsenceDeductionReport()"><span aria-hidden="true">⎙</span> طباعة التقرير</button>
+                    </div>
+                </div>
+                <div class="report-filters" aria-label="تصفية تقرير الغياب والخصومات">
+                    <label class="report-search-field">
+                        <span>بحث عن موظف</span>
+                        <input type="search" id="absence-deduction-search" placeholder="الاسم أو الرقم الوظيفي" autocomplete="off">
+                    </label>
+                    <label>
+                        <span>الفرع</span>
+                        <select id="absence-deduction-branch">
+                            <option value="">جميع الفروع</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>نوع القيد</span>
+                        <select id="absence-deduction-type">
+                            <option value="">الكل</option>
+                            <option value="absence">غياب</option>
+                            <option value="deduction">خصم</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>من تاريخ</span>
+                        <input type="date" id="absence-deduction-from">
+                    </label>
+                    <label>
+                        <span>إلى تاريخ</span>
+                        <input type="date" id="absence-deduction-to">
+                    </label>
+                    <button class="btn btn-secondary report-reset-button" type="button" onclick="resetAbsenceDeductionFilters()">مسح التصفية</button>
+                </div>
+                <div class="report-summary" aria-live="polite">
+                    <div class="report-summary-item"><span class="summary-mark report-mark-count"></span><span>القيود المعروضة</span><strong id="absence-deduction-count">٠</strong></div>
+                    <div class="report-summary-item"><span class="summary-mark report-mark-days"></span><span>أيام الغياب</span><strong id="absence-deduction-days">٠</strong></div>
+                    <div class="report-summary-item"><span class="summary-mark report-mark-total"></span><span>إجمالي الخصومات</span><strong id="absence-deduction-total">٠</strong><small>درهم</small></div>
+                </div>
+                <div class="report-subsection-heading report-ledger-heading">
+                    <div>
+                        <h3>تفاصيل القيود المؤرخة</h3>
+                        <p>تعديل القيود أو حذفها من سجل الموظف.</p>
+                    </div>
+                </div>
+                <div class="table-container report-table-container">
+                    <table id="absence-deduction-table">
+                        <thead>
+                            <tr>
+                                <th>م</th>
+                                <th>الموظف</th>
+                                <th>الرقم الوظيفي</th>
+                                <th>الفرع</th>
+                                <th>نوع القيد</th>
+                                <th>التاريخ</th>
+                                <th>البيان</th>
+                                <th>أيام الغياب</th>
+                                <th>قيمة الخصم</th>
+                                <th class="report-actions-heading">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="absence-deduction-tbody"></tbody>
+                        <tfoot id="absence-deduction-tfoot"></tfoot>
+                    </table>
+                </div>
+                <p class="report-footnote">يعرض التقرير قيود الغياب والخصم من جميع الشهور افتراضياً؛ استخدم نطاق التاريخ للتصفية، أو عدّله واحذفه من السجل.</p>
+            </section>
+
+            <!-- كشف الرواتب -->
+            <section id="salary-sheet" class="page" aria-hidden="true">
+                <div class="page-header">
+                    <h2>كشف الرواتب المختصر</h2>
+                    <div class="actions-bar">
+                        <select id="salary-month"></select>
+                        <select id="salary-year"></select>
+                        <select id="salary-branch-filter">
+                            <option value="">جميع الفروع</option>
+                        </select>
+                        <input type="text" id="salary-search" placeholder="بحث بالاسم...">
+                        <button class="btn btn-primary" onclick="printSalarySheet()">طباعة</button>
+                        <button class="btn btn-primary" onclick="printSalaryWages()">كشف الأجور</button>
+                        <button class="btn btn-success" onclick="exportSalaryToExcel()">تصدير Excel</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="salary-table">
+                        <thead>
+                            <tr>
+                                <th>م</th>
+                                <th>اسم الموظف</th>
+                                <th>الفرع</th>
+                                <th>الراتب الأساسي</th>
+                                <th>خصم الغياب</th>
+                                <th>الخصومات</th>
+                                <th>الصافي</th>
+                                <th>ملاحظات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salary-tbody"></tbody>
+                        <tfoot id="salary-tfoot"></tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section id="salary-receipts" class="page" aria-hidden="true">
+                <div class="page-header report-header">
+                    <div>
+                        <span class="report-eyebrow">اعتماد وصرف الرواتب</span>
+                        <h2>سندات رواتب الفرع</h2>
+                        <p>معاينة محدثة للرواتب المستحقة؛ بعد التأكيد يُسجّل الصرف ويُفتح مستند طباعة مستقل لكل موظف.</p>
+                    </div>
+                    <button class="btn btn-secondary" type="button" onclick="refreshBranchSalaryReceipts()">تحديث البيانات</button>
+                </div>
+                <div class="salary-receipt-workspace">
+                    <div class="salary-receipt-filters" aria-label="تحديد فترة وفرع الرواتب">
+                        <label>
+                            <span>الشهر</span>
+                            <select id="salary-receipt-month"></select>
+                        </label>
+                        <label>
+                            <span>السنة</span>
+                            <select id="salary-receipt-year"></select>
+                        </label>
+                        <label>
+                            <span>الفرع</span>
+                            <select id="salary-receipt-branch"><option value="">اختر الفرع</option></select>
+                        </label>
+                        <label>
+                            <span>طريقة السداد</span>
+                            <select id="salary-receipt-method">
+                                <option value="cash">نقداً من الصندوق</option>
+                                <option value="abuSaleh">من أبو صالح</option>
+                                <option value="abuHussein">من أبو حسين</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>تاريخ السداد</span>
+                            <input type="date" id="salary-receipt-date">
+                        </label>
+                    </div>
+                    <section class="salary-receipt-reprint" aria-labelledby="salary-receipt-reprint-title">
+                        <div class="salary-receipt-reprint-heading">
+                            <h3 id="salary-receipt-reprint-title">إعادة طباعة سندات محفوظة</h3>
+                            <p>اختر فرعاً لطباعة سندات الرواتب المعتمدة المحفوظة للشهر والسنة المحددين.</p>
+                        </div>
+                        <div id="salary-receipt-reprint-branches" class="salary-receipt-reprint-branches"
+                            role="group" aria-label="إعادة طباعة سندات الرواتب حسب الفرع"></div>
+                    </section>
+                    <div class="salary-receipt-summary" aria-live="polite">
+                        <div><span>موظفو الفرع النشطون</span><strong id="salary-receipt-employees">٠</strong></div>
+                        <div><span>المستحق المتبقي</span><strong id="salary-receipt-due">٠ <small>درهم</small></strong></div>
+                        <div><span>المصروف سابقاً</span><strong id="salary-receipt-paid">٠ <small>درهم</small></strong></div>
+                        <div><span>سندات هذه الدفعة</span><strong id="salary-receipt-pages">٠</strong></div>
+                    </div>
+                    <div id="salary-receipt-feedback" class="salary-receipt-feedback" role="status" aria-live="polite">
+                        اختر فرعاً لعرض الرواتب الحالية.
+                    </div>
+                    <div class="salary-receipt-table-wrap">
+                        <table class="salary-receipt-table">
+                            <thead>
+                                <tr>
+                                    <th>م</th>
+                                    <th>الموظف</th>
+                                    <th>المسمى الوظيفي</th>
+                                    <th>الراتب الصافي المتبقي</th>
+                                    <th>الحالة</th>
+                                    <th>صفحة الإيصال</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salary-receipt-tbody"></tbody>
+                        </table>
+                    </div>
+                    <section class="salary-receipt-preview-panel" aria-label="معاينة الإيصال">
+                        <div class="salary-receipt-preview-heading">
+                            <h3>معاينة الإيصال الأول</h3>
+                            <span id="salary-receipt-preview-count">لا توجد صفحات للمعاينة</span>
+                        </div>
+                        <div id="salary-receipt-preview" class="salary-receipt-preview">
+                            اختر فرعاً لعرض نموذج الإيصال.
+                        </div>
+                    </section>
+                    <div class="salary-receipt-actions">
+                        <span>سيبدأ كل إيصال في صفحة A4 مستقلة ضمن مستند واحد.</span>
+                        <button id="salary-receipt-approve" class="btn btn-success" type="button" onclick="confirmAndPrintBranchSalaryReceipts()" disabled>طباعة واعتماد الصرف</button>
+                    </div>
+                    <p class="salary-receipt-note">بعد التأكيد يُحفظ سند لكل موظف مستحق قبل فتح شاشة الطباعة. إتمام الحفظ لا يؤكد نجاح الطباعة الفعلية.</p>
+                </div>
+            </section>
+
+            <!-- ملخص الفروع -->
+            <section id="branches" class="page" aria-hidden="true">
+                <div class="page-header">
+                    <h2>ملخص الفروع</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>ملخص الفرع</h3>
+                        <p style="margin-bottom:15px; color:var(--text-light); font-size:13px">اختر فرعاً لعرض موظفيه وكشف رواتب مختصر</p>
+                        <div class="actions-bar" style="justify-content:flex-start">
+                            <select id="branch-summary-branch"></select>
+                            <select id="branch-summary-month"></select>
+                            <select id="branch-summary-year"></select>
+                            <button class="btn btn-primary" onclick="printBranchSummary()">طباعة</button>
+                        </div>
+                        <div id="branch-employees-table-wrapper">
+                            <p style="color:var(--text-light); padding:30px; text-align:center">اختر فرعاً لعرض الموظفين وكشف الرواتب المختصر</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- طباعة السندات -->
+            <section id="print-vouchers" class="page" aria-hidden="true">
+                <div class="page-header">
+                    <h2>طباعة السندات</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section" id="voucher-builder">
+                        <h3 class="field-full">إنشاء وطباعة السندات</h3>
+                        <div class="form-group">
+                            <label>نوع السند</label>
+                            <select id="voucher-type" onchange="onVoucherTypeChange()">
+                                <option value="payment">سند صرف</option>
+                                <option value="collection">سند قبض</option>
+                                <option value="salary">سند صرف</option>
+                            </select>
+                        </div>
+
+                        <div id="voucher-normal-section">
+                            <div class="form-group">
+                                <label>المستفيد</label>
+                                <select id="voucher-recipient-type">
+                                    <option value="employee">موظف</option>
+                                    <option value="external">جهة خارجية</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>المبلغ</label>
+                                <input type="number" id="voucher-amount" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="voucher-date">
+                            </div>
+                            <div class="form-group" id="voucher-employee-group">
+                                <label>اختر الموظف</label>
+                                <input type="text" id="voucher-employee-search" placeholder="بحث بالاسم أو الرقم..." oninput="filterVoucherEmployees()">
+                                <select id="voucher-employee-select"></select>
+                            </div>
+                            <div class="form-group" id="voucher-external-group" style="display:none">
+                                <label>اسم الجهة الخارجية</label>
+                                <input type="text" id="voucher-external-name">
+                            </div>
+                            <div class="form-group">
+                                <label>السبب</label>
+                                <input type="text" id="voucher-reason">
+                            </div>
+                            <div class="form-group">
+                                <label>طريقة السداد</label>
+                                <select id="voucher-payment-method">
+                                    <option value="cash">نقداً من الصندوق</option>
+                                    <option value="abuSaleh">من أبو صالح</option>
+                                    <option value="abuHussein">من أبو حسين</option>
+                                </select>
+                            </div>
+                            <div class="form-group field-full">
+                                <button class="btn btn-primary btn-block" onclick="createVoucher()">حفظ السند</button>
+                            </div>
+                        </div>
+
+                        <div id="voucher-salary-section" style="display:none">
+                            <div class="form-group field-full">
+                                <hr style="margin:5px 0; border:none; border-top:1px solid var(--border)">
+                                <h4 style="margin-bottom:10px; color:var(--primary)">إصدار سندات صرف الراتب</h4>
+                            </div>
+                            <div class="form-group">
+                                <label>الطباعة لأجل</label>
+                                <select id="salary-voucher-target" onchange="onSalaryVoucherTargetChange()">
+                                    <option value="employee">موظف</option>
+                                    <option value="branch">فرع</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>الشهر</label>
+                                <select id="salary-voucher-month"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>السنة</label>
+                                <select id="salary-voucher-year"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>طريقة السداد</label>
+                                <select id="salary-voucher-method">
+                                    <option value="cash">نقداً من الصندوق</option>
+                                    <option value="abuSaleh">من أبو صالح</option>
+                                    <option value="abuHussein">من أبو حسين</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="salary-voucher-date">
+                            </div>
+                            <div id="salary-voucher-employee-picker" class="field-full">
+                                <div class="form-group">
+                                    <label>البحث بالاسم أو الرقم</label>
+                                    <input type="text" id="salary-voucher-employee-search" placeholder="اكتب للبحث بالاسم أو الرقم..." oninput="filterSalaryVoucherEmployee()">
+                                    <select id="salary-voucher-employee-select"></select>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="generateSingleSalaryVoucher()">إصدار وطباعة سند الموظف</button>
+                            </div>
+                            <div id="salary-voucher-branch-picker" class="field-full" style="display:none">
+                                <div class="form-group">
+                                    <label>الفرع</label>
+                                    <select id="salary-voucher-branch"></select>
+                                </div>
+                                <button class="btn btn-success btn-block" onclick="generateSalaryVouchers()">إصدار سندات الفرع</button>
+                            </div>
+                            <div class="form-group field-full">
+                                <button class="btn btn-info btn-block" onclick="printAllSalaryVouchers()">طباعة جميع سندات الراتب للشهر المحدد</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section" style="margin-top:20px; background:var(--white); padding:25px; border-radius:var(--radius); box-shadow:var(--shadow);">
+                    <h3>السندات المحفوظة</h3>
+                    <div class="actions-bar">
+                        <select id="saved-voucher-filter">
+                            <option value="all">كل السندات</option>
+                            <option value="payment">سندات الصرف</option>
+                            <option value="collection">سندات القبض</option>
+                            <option value="salary">سندات الرواتب</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="loadVouchers()">تحديث</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>م</th>
+                                    <th>النوع</th>
+                                    <th>المستفيد</th>
+                                    <th>المبلغ</th>
+                                    <th>السبب</th>
+                                    <th>طريقة السداد</th>
+                                    <th>التاريخ</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vouchers-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- الإعدادات -->
+            <section id="settings" class="page" aria-hidden="true">
+                <div class="page-header">
+                    <h2>الإعدادات</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>بيانات الشركة</h3>
+                        <div class="form-group">
+                            <label>اسم الشركة</label>
+                            <input type="text" id="setting-company-name">
+                        </div>
+                        <div class="form-group">
+                            <label>شعار الشركة</label>
+                            <input type="file" id="setting-company-logo" accept="image/*">
+                            <div id="logo-preview" class="logo-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>توقيع المحاسب (يُطبع في جميع السندات)</label>
+                            <input type="file" id="setting-signature" accept="image/*">
+                            <div id="signature-preview" class="logo-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>العنوان</label>
+                            <input type="text" id="setting-company-address">
+                        </div>
+                        <div class="form-group">
+                            <label>الهاتف</label>
+                            <input type="text" id="setting-company-phone">
+                        </div>
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="setting-company-email">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()">حفظ الإعدادات</button>
+                    </div>
+                    <div class="settings-section">
+                        <h3>تغيير كلمة المرور</h3>
+                        <div class="form-group">
+                            <label>كلمة المرور الحالية</label>
+                            <input type="password" id="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور الجديدة</label>
+                            <input type="password" id="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label>تأكيد كلمة المرور</label>
+                            <input type="password" id="confirm-password">
+                        </div>
+                        <button class="btn btn-primary" onclick="changePassword()">تغيير كلمة المرور</button>
+                    </div>
+                    <div class="settings-section">
+                        <h3>النسخة الاحتياطية</h3>
+                        <p style="font-size:13px; opacity:0.7; margin-bottom:10px;">ملف JSON يحتوي كل البيانات (موظفون، سندات، ملاحظات، إعدادات). استخدمه لنقل بياناتك إلى جهاز آخر أو إلى موقع المزامنة.</p>
+                        <button class="btn btn-info" onclick="exportBackup()">تنزيل نسخة احتياطية</button>
+                        <button class="btn btn-primary" onclick="pickBackupFile()">استيراد نسخة احتياطية</button>
+                        <input type="file" id="import-backup-file" accept=".json" style="display:none" onchange="importBackupFile(this)">
+                    </div>
+                </div>
+            </section>
+
+            <!-- إدارة الموظفين -->
+            <section id="employees" class="page" aria-hidden="true">
+                <div class="page-header">
+                    <h2>إدارة الموظفين</h2>
+                    <div class="actions-bar">
+                        <button class="btn btn-primary" onclick="showEmployeeModal()">إضافة موظف</button>
+                        <button class="btn btn-success" onclick="importEmployeesFromExcel()">استيراد من Excel</button>
+                        <button class="btn btn-info" onclick="exportEmployeesToExcel()">تصدير إلى Excel</button>
+                        <input type="file" id="import-excel-file" accept=".xlsx,.xls" style="display:none">
+                        <input type="text" id="employee-search" placeholder="بحث بالاسم..." oninput="filterEmployees()">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="employees-table">
+                        <thead>
+                            <tr>
+                                <th>م</th>
+                                <th>رقم وظيفي</th>
+                                <th>اسم الموظف</th>
+                                <th>الراتب الأساسي</th>
+                                <th>الفرع</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
-    <button id="return-button" class="button button-light button-return" type="button">
-      <span aria-hidden="true">↩</span> العودة إلى تسجيل الدخول
-    </button>
-  </header>
 
-  <main id="portal-content">
-    <section id="login-screen" class="login-layout" aria-labelledby="login-title">
-      <aside class="brand-panel">
-        <div class="brand-panel-top">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="brand-overline">مكتب الإدارة</span>
-        </div>
-        <div class="brand-panel-copy">
-          <p class="eyebrow eyebrow-light">بوابة العمل الموحدة</p>
-          <h1>إدارة واحدة.<br><span>ثلاثة أنظمة.</span></h1>
-          <p class="brand-description">كل ما تحتاجه لإدارة الرواتب ومتابعة التقارير، في مساحة عمل واحدة.</p>
-          <div class="system-map" role="img" aria-label="الرواتب والفروع والمطاعم أنظمة مستقلة تتصل ببوابة واحدة">
-            <div class="system-map-systems">
-              <div class="system-node"><span class="system-node-mark">ر</span><span>الرواتب</span></div>
-              <div class="system-node"><span class="system-node-mark">ف</span><span>الفروع</span></div>
-              <div class="system-node"><span class="system-node-mark">م</span><span>المطاعم</span></div>
+    <!-- Modal إضافة/تعديل موظف -->
+    <div id="employee-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="employee-modal-title">إضافة موظف</h3>
+                <span class="close-modal" onclick="closeEmployeeModal()">&times;</span>
             </div>
-            <span class="system-map-connector" aria-hidden="true"></span>
-            <div class="system-map-hub">
-              <span class="system-hub-mark brand-mark brand-mark-small" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span>بوابة واحدة</span>
+            <form id="employee-form">
+                <div class="form-group">
+                    <label>الرقم الوظيفي</label>
+                    <input type="number" id="emp-id" min="1" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label>اسم الموظف</label>
+                    <input type="text" id="emp-name" required>
+                </div>
+                <div class="form-group">
+                    <label>الفرع</label>
+                    <input type="text" id="emp-branch" required list="branches-list">
+                    <datalist id="branches-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>المنصب</label>
+                    <input type="text" id="emp-position">
+                </div>
+                <div class="form-group">
+                    <label>تاريخ التعيين / التسجيل</label>
+                    <input type="date" id="emp-start-date">
+                    <small>لن يظهر الموظف في كشوف الأشهر السابقة لهذا التاريخ. اتركه فارغاً للموظفين الحاليين المسجلين قبل إضافة هذا الحقل.</small>
+                </div>
+                <div class="form-group">
+                    <label>الراتب الأساسي</label>
+                    <input type="number" id="emp-salary" min="0" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label>أيام الغياب (يُخصم تلقائياً: الراتب ÷ أيام الشهر)</label>
+                    <input type="number" id="emp-absences" min="0" step="0.5" value="0">
+                </div>
+                <div class="form-group">
+                    <label>خصومات أخرى (يدوية)</label>
+                    <input type="number" id="emp-other-deductions" min="0" step="1" value="0">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal ملاحظات الموظف -->
+    <div id="notes-modal" class="modal" style="display:none">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="notes-modal-title">ملاحظات الموظف</h3>
+                <span class="close-modal" onclick="closeNotesModal()">&times;</span>
             </div>
-          </div>
+            <div class="notes-actions">
+                <button class="btn btn-primary" onclick="addEmployeeNote()">إضافة ملاحظة</button>
+            </div>
+            <div class="table-container">
+                <table id="notes-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ / الفترة</th>
+                            <th>الملاحظة</th>
+                            <th>المبلغ</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notes-tbody"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="brand-panel-footer">
-          <span class="footer-rule"></span>
-          <span>بيئة عمل محلية على هذا الجهاز</span>
-        </div>
-        <span class="brand-watermark" aria-hidden="true">٠١</span>
-      </aside>
+    </div>
 
-      <section class="form-panel">
-        <div class="form-panel-inner">
-          <div class="form-heading">
-            <span class="eyebrow">تسجيل الدخول</span>
-            <h2 id="login-title">مرحباً بعودتك</h2>
-            <p>أدخل بيانات حساب الإدارة للمتابعة.</p>
-          </div>
-          <form id="login-form">
-            <label class="field-label" for="username">اسم المستخدم</label>
-            <input id="username" name="username" type="text" value="admin" autocomplete="username" required>
-            <label class="field-label field-label-spaced" for="password">كلمة المرور</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
-            <label class="field-label field-label-spaced" for="application">البرنامج</label>
-            <select id="application" name="application" required>
-              <option value="" selected disabled>اختر البرنامج المطلوب</option>
-              <option value="payroll">الرواتب والسندات</option>
-              <option value="branches">تقارير الفروع</option>
-              <option value="restaurants">تقارير المطاعم</option>
-            </select>
-            <p id="login-error" class="form-message" role="alert" hidden></p>
-            <p id="login-feedback" class="form-feedback" role="status" hidden></p>
-            <button class="button button-primary button-submit" type="submit">
-              <span>دخول وتشغيل البرنامج</span><span class="button-arrow" aria-hidden="true">←</span>
-            </button>
-          </form>
-          <button id="change-password-button" class="text-button password-link" type="button">تغيير كلمة المرور</button>
-          <p class="local-note">يتم حفظ كلمة المرور محلياً باستخدام حماية النظام.</p>
+    <!-- Modal تفاصيل الخصومات -->
+    <div id="deductions-modal" class="modal" style="display:none">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="deductions-modal-title">تفاصيل الخصومات</h3>
+                <span class="close-modal" onclick="closeDeductionsModal()">&times;</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>البيان</th>
+                            <th>المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deductions-tbody"></tbody>
+                </table>
+            </div>
         </div>
-      </section>
-    </section>
-  </main>
+    </div>
 
-  <dialog id="password-dialog" class="password-dialog">
-    <form id="password-form">
-      <div class="dialog-heading">
-        <span class="dialog-lock" aria-hidden="true">⌑</span>
-        <div><p class="eyebrow">إعدادات الحساب</p><h2>تغيير كلمة المرور</h2></div>
-      </div>
-      <label class="field-label" for="current-password">كلمة المرور الحالية</label>
-      <input id="current-password" type="password" autocomplete="current-password" required>
-      <label class="field-label field-label-spaced" for="new-password">كلمة المرور الجديدة</label>
-      <input id="new-password" type="password" autocomplete="new-password" minlength="4" required>
-      <label class="field-label field-label-spaced" for="confirm-password">تأكيد كلمة المرور الجديدة</label>
-      <input id="confirm-password" type="password" autocomplete="new-password" minlength="4" required>
-      <p id="password-message" class="form-message" role="alert" hidden></p>
-      <div class="dialog-actions">
-        <button class="button button-primary" type="submit">حفظ التغيير</button>
-        <button id="cancel-password-button" class="button button-quiet" type="button">إلغاء</button>
-      </div>
-    </form>
-  </dialog>
+    <!-- Modal إضافة ملاحظة -->
+    <div id="add-note-modal" class="modal" style="display:none">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>إضافة ملاحظة</h3>
+                <span class="close-modal" onclick="closeAddNoteModal()">&times;</span>
+            </div>
+            <form id="note-form" novalidate>
+                <div class="form-group">
+                    <label>اليوم</label>
+                    <select id="note-day" required></select>
+                </div>
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="note-type" onchange="handleNoteTypeChange()">
+                        <option value="deduction">خصم</option>
+                        <option value="absence">غياب</option>
+                        <option value="other">ملاحظة أخرى</option>
+                        <option value="leave">إجازة سنوية</option>
+                        <option value="advance">سلفة</option>
+                    </select>
+                </div>
+                <div class="form-group" id="note-absence-group" style="display:none">
+                    <label>نوع الغياب</label>
+                    <select id="note-absence-slot">
+                        <option value="full">غياب كامل</option>
+                        <option value="start">بداية دوام</option>
+                        <option value="end">نهاية دوام</option>
+                    </select>
+                    <label>من تاريخ</label>
+                    <input type="date" id="note-absence-from" onchange="updateAbsenceCalc()">
+                    <label>إلى تاريخ</label>
+                    <input type="date" id="note-absence-to" onchange="updateAbsenceCalc()">
+                    <label>سبب الغياب (اختياري)</label>
+                    <input type="text" id="note-absence-reason" placeholder="مثال: إجازة مرضية، ظروف عائلية...">
+                    <div id="note-absence-days-label" style="margin-top:8px; font-weight:bold; color:var(--danger)"></div>
+                    <div id="note-absence-result" style="font-weight:bold; color:var(--danger)"></div>
+                    <p style="font-size:12px; opacity:0.6; margin-top:6px">يُحسب عدد أيام الغياب تلقائياً بين التاريخين (ضمن الشهر المحدد أعلاه)</p>
+                </div>
+                <div class="form-group" id="note-leave-group" style="display:none">
+                    <label>بداية الإجازة</label>
+                    <input type="date" id="note-leave-from">
+                    <label>نهاية الإجازة (اختياري — يُترك فارغاً إذا كانت مستمرة)</label>
+                    <input type="date" id="note-leave-to">
+                    <p style="font-size:12px; opacity:0.6; margin-top:6px">خلال الإجازة يُستبعد الموظف من ملخص الفروع وسندات الرواتب وكشف الأجور. عند إنهاء الإجازة يُحسب راتبه عن الأيام العاملة فقط</p>
+                </div>
+                <div class="form-group" id="note-text-group">
+                    <label id="note-text-label">سبب الخصم</label>
+                    <input type="text" id="note-text">
+                </div>
+                <div class="form-group" id="note-amount-group">
+                    <label id="note-amount-label">المبلغ</label>
+                    <input type="number" id="note-amount" step="1" min="0" value="0">
+                </div>
+                <div class="form-group" id="note-advance-hint" style="display:none">
+                    <p style="font-size:13px; color:var(--accent)">سيتم إصدار سند سلفة قابل للطباعة تلقائياً</p>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal طباعة سند -->
+    <div id="print-voucher-modal" class="modal" style="display:none">
+        <div class="modal-content modal-print">
+            <section class="recipient-signature-tools" aria-label="توقيع المستلم">
+                <h3>توقيع المستلم</h3>
+                <p>وقّع داخل المساحة ثم اضغط حفظ التوقيع.</p>
+                <canvas id="recipient-signature-canvas" aria-label="مساحة توقيع المستلم"></canvas>
+                <div class="recipient-signature-actions">
+                    <button class="btn btn-secondary" type="button" onclick="clearRecipientSignature()">مسح</button>
+                    <button class="btn btn-success" type="button" onclick="saveRecipientSignature()">حفظ التوقيع</button>
+                </div>
+                <p id="recipient-signature-status" role="status" aria-live="polite"></p>
+            </section>
+            <div class="print-content" id="print-voucher-content"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="printVoucher()">طباعة</button>
+                <button class="btn btn-secondary" onclick="closePrintVoucherModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="voucher-edit-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تعديل السند المحفوظ</h3>
+                <span class="close-modal" onclick="closeVoucherEditModal()">&times;</span>
+            </div>
+            <form id="voucher-edit-form">
+                <div class="form-group">
+                    <label for="voucher-edit-type">نوع السند</label>
+                    <select id="voucher-edit-type">
+                        <option value="payment">سند صرف</option>
+                        <option value="collection">سند قبض</option>
+                        <option value="salary">سند صرف</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="voucher-edit-recipient-type">نوع المستفيد</label>
+                    <select id="voucher-edit-recipient-type" onchange="onVoucherEditRecipientChange()">
+                        <option value="employee">موظف</option>
+                        <option value="external">جهة خارجية</option>
+                    </select>
+                </div>
+                <div class="form-group" id="voucher-edit-employee-group">
+                    <label for="voucher-edit-employee">الموظف</label>
+                    <select id="voucher-edit-employee" required></select>
+                </div>
+                <div class="form-group" id="voucher-edit-external-group" style="display:none">
+                    <label for="voucher-edit-external-name">اسم الجهة الخارجية</label>
+                    <input type="text" id="voucher-edit-external-name">
+                </div>
+                <div class="form-group">
+                    <label for="voucher-edit-amount">المبلغ</label>
+                    <input type="number" id="voucher-edit-amount" min="1" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="voucher-edit-date">التاريخ</label>
+                    <input type="date" id="voucher-edit-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="voucher-edit-reason">السبب</label>
+                    <input type="text" id="voucher-edit-reason">
+                </div>
+                <div class="form-group">
+                    <label for="voucher-edit-payment-method">طريقة السداد</label>
+                    <select id="voucher-edit-payment-method">
+                        <option value="cash">نقداً من الصندوق</option>
+                        <option value="abuSaleh">من أبو صالح</option>
+                        <option value="abuHussein">من أبو حسين</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeVoucherEditModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- منطقة طباعة كشف الرواتب -->
+    <div id="print-salary-area" class="print-area"></div>
+    <div id="absence-deduction-print-area" class="print-area"></div>
+
+    <script src="app.js"></script>
 </body>
 </html>
