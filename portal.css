@@ -1,9 +1,11 @@
-// https://umbywqbzgdoaggxkiwl.supabase.co
-const SUPABASE_URL = 'https://umbywqbzgdoaggxkiwl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_gfc0-MYr0tOP1JzRiTKN6g_1guP0...'; // sb_publishable_gfc0-MYr0tOP1JzRiTKN6g_1guPOR-2
+// 1. رابط مشروع Supabase الخاص بك
+const SUPABASE_URL = 'https://umbywqbzgdoaggxkiwl.supabase.co';[cite: 7]
 
-// إنشاء اتصال Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);:root {
+// 2. المفتاح العام المنسوخ من صفحة API Keys
+const SUPABASE_KEY = 'sb_publishable_gfc0-MYr0tOP1JzRiTKN6g_1guPOR-2';[cite: 10]
+
+// 3. إنشاء الاتصال بقاعدة البيانات
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);:root {
   color-scheme: light;
   --ink: #172728;
   --ink-soft: #334444;
