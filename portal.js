@@ -1,3 +1,4 @@
+(() => {
 const bridge = window.portalBridge;
 const loginScreen = document.getElementById('login-screen');
 const applicationBar = document.getElementById('application-bar');
@@ -9,6 +10,18 @@ const passwordMessage = document.getElementById('password-message');
 function showMessage(element, message) {
   element.textContent = message;
   element.hidden = !message;
+}
+
+if (!bridge || typeof bridge.authenticate !== 'function' ||
+    typeof bridge.openApplication !== 'function' ||
+    typeof bridge.onStateChange !== 'function') {
+  showMessage(
+    loginError,
+    'هذه واجهة نسخة ويندوز ولا تعمل عند فتح الملف في المتصفح. شغّل مثبت بوابة الأنظمة، أو افتح رابط الويب المنشور من مجلد web بعد إعداد Supabase.'
+  );
+  document.querySelector('#login-form button[type="submit"]').disabled = true;
+  document.getElementById('change-password-button').disabled = true;
+  return;
 }
 
 function showLogin() {
@@ -109,3 +122,4 @@ bridge.onStateChange(state => {
 });
 
 showLogin();
+})();
