@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:">
+  <title>بوابة الأنظمة الإدارية</title>
+  <link rel="stylesheet" href="portal.css">
+  <script src="portal.js" defer></script>
+</head>
+<body>
+  <header id="application-bar" class="application-bar" hidden>
+    <div class="bar-brand">
+      <span class="brand-mark brand-mark-small" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>الأنظمة الإدارية</span>
+    </div>
+    <div class="bar-current">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="active-app-label"></span>
+    </div>
+    <button id="return-button" class="button button-light button-return" type="button">
+      <span aria-hidden="true">↩</span> العودة إلى تسجيل الدخول
+    </button>
+  </header>
+
+  <main id="portal-content">
+    <section id="login-screen" class="login-layout" aria-labelledby="login-title">
+      <aside class="brand-panel">
+        <div class="brand-panel-top">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-overline">مكتب الإدارة</span>
+        </div>
+        <div class="brand-panel-copy">
+          <p class="eyebrow eyebrow-light">بوابة العمل الموحدة</p>
+          <h1>إدارة واحدة.<br><span>ثلاثة أنظمة.</span></h1>
+          <p class="brand-description">كل ما تحتاجه لإدارة الرواتب ومتابعة التقارير، في مساحة عمل واحدة.</p>
+          <div class="system-map" role="img" aria-label="الرواتب والفروع والمطاعم أنظمة مستقلة تتصل ببوابة واحدة">
+            <div class="system-map-systems">
+              <div class="system-node"><span class="system-node-mark">ر</span><span>الرواتب</span></div>
+              <div class="system-node"><span class="system-node-mark">ف</span><span>الفروع</span></div>
+              <div class="system-node"><span class="system-node-mark">م</span><span>المطاعم</span></div>
+            </div>
+            <span class="system-map-connector" aria-hidden="true"></span>
+            <div class="system-map-hub">
+              <span class="system-hub-mark brand-mark brand-mark-small" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span>بوابة واحدة</span>
+            </div>
+          </div>
+        </div>
+        <div class="brand-panel-footer">
+          <span class="footer-rule"></span>
+          <span>بيئة عمل محلية على هذا الجهاز</span>
+        </div>
+        <span class="brand-watermark" aria-hidden="true">٠١</span>
+      </aside>
+
+      <section class="form-panel">
+        <div class="form-panel-inner">
+          <div class="form-heading">
+            <span class="eyebrow">تسجيل الدخول</span>
+            <h2 id="login-title">مرحباً بعودتك</h2>
+            <p>أدخل بيانات حساب الإدارة للمتابعة.</p>
+          </div>
+          <form id="login-form">
+            <label class="field-label" for="username">اسم المستخدم</label>
+            <input id="username" name="username" type="text" value="admin" autocomplete="username" required>
+            <label class="field-label field-label-spaced" for="password">كلمة المرور</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <label class="field-label field-label-spaced" for="application">البرنامج</label>
+            <select id="application" name="application" required>
+              <option value="" selected disabled>اختر البرنامج المطلوب</option>
+              <option value="payroll">الرواتب والسندات</option>
+              <option value="branches">تقارير الفروع</option>
+              <option value="restaurants">تقارير المطاعم</option>
+            </select>
+            <p id="login-error" class="form-message" role="alert" hidden></p>
+            <p id="login-feedback" class="form-feedback" role="status" hidden></p>
+            <button class="button button-primary button-submit" type="submit">
+              <span>دخول وتشغيل البرنامج</span><span class="button-arrow" aria-hidden="true">←</span>
+            </button>
+          </form>
+          <button id="change-password-button" class="text-button password-link" type="button">تغيير كلمة المرور</button>
+          <p class="local-note">يتم حفظ كلمة المرور محلياً باستخدام حماية النظام.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="password-dialog" class="password-dialog">
+    <form id="password-form">
+      <div class="dialog-heading">
+        <span class="dialog-lock" aria-hidden="true">⌑</span>
+        <div><p class="eyebrow">إعدادات الحساب</p><h2>تغيير كلمة المرور</h2></div>
+      </div>
+      <label class="field-label" for="current-password">كلمة المرور الحالية</label>
+      <input id="current-password" type="password" autocomplete="current-password" required>
+      <label class="field-label field-label-spaced" for="new-password">كلمة المرور الجديدة</label>
+      <input id="new-password" type="password" autocomplete="new-password" minlength="4" required>
+      <label class="field-label field-label-spaced" for="confirm-password">تأكيد كلمة المرور الجديدة</label>
+      <input id="confirm-password" type="password" autocomplete="new-password" minlength="4" required>
+      <p id="password-message" class="form-message" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button class="button button-primary" type="submit">حفظ التغيير</button>
+        <button id="cancel-password-button" class="button button-quiet" type="button">إلغاء</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
