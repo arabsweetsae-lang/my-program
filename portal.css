@@ -1,4 +1,9 @@
-:root {
+// https://umbywqbzgdoaggxkiwl.supabase.co
+const SUPABASE_URL = 'https://umbywqbzgdoaggxkiwl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_gfc0-MYr0tOP1JzRiTKN6g_1guP0...'; // sb_publishable_gfc0-MYr0tOP1JzRiTKN6g_1guPOR-2
+
+// إنشاء اتصال Supabase
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);:root {
   color-scheme: light;
   --ink: #172728;
   --ink-soft: #334444;
